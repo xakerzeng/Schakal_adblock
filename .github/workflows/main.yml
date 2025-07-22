@@ -1,0 +1,33 @@
+name: Update Spam Domains List
+
+on:
+  schedule:
+    - cron: '0 3 */2 * *' # Запускать каждые 2 дня в 03:00 UTC
+  workflow_dispatch: # Позволяет запускать вручную из вкладки Actions
+
+jobs:
+  update-file:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download latest spam domains
+      run: |
+        curl -o hosts.txt "https://schakal.ru/hosts/hosts.txt"
+        # Ссылка на файл обновлена на schakal.ru/hosts/hosts.txt
+
+    - name: Commit and push if changes
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
+        
+        # Проверяем, есть ли изменения в файле
+        git add hosts.txt
+        if ! git diff --cached --exit-code; then
+          git commit -m "Автоматическое обновление списка спам-доменов"
+          git push
+        else
+          echo "Файл не изменился. Пропуск коммита."
+        fi
